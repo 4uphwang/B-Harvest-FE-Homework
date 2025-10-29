@@ -1,3 +1,4 @@
+import { BottomNav } from "components/layout/BottomNav";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AppProviders } from "../provider";
@@ -24,11 +25,11 @@ export default function RootLayout({
         <html lang="en">
             <body className={`font-inter ${inter.variable} antialiased`}>
                 <AppProviders>
-                    <div className="relative mx-auto h-screen bg-black shadow-2xl">
-
-                        {children}
-
-                    {children}
+                    <div className="relative font-medium w-[375px] mx-auto h-screen bg-black shadow-2xl overflow-hidden flex flex-col">
+                        <div className="flex-1 overflow-y-scroll scrollbar-hide">
+                            {children}
+                        </div>
+                        <BottomNav />
                     </div>
                 </AppProviders>
             </body>
