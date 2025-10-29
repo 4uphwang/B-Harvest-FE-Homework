@@ -1,4 +1,5 @@
 import { BottomNav } from "components/layout/BottomNav";
+import { ToastContainer } from "components/ui/ToastContainer";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AppProviders } from "../provider";
@@ -30,6 +31,7 @@ export default function RootLayout({
                             {children}
                         </div>
                         <BottomNav />
+                        <ToastContainer />
                     </div>
                 </AppProviders>
             </body>

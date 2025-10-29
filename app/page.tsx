@@ -1,8 +1,6 @@
-import TestPage from "components/tester/TestPage";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-    return (
-        <TestPage />
-    );
+export default function RootPage() {
+    redirect('/vaults');
 }
 
