@@ -36,3 +36,8 @@ export const FAKE_TOKENS: Token[] = [
 export const getTokenBySymbol = (symbol: string) => {
     return FAKE_TOKENS.find(token => token.symbol === symbol);
 };
+
+export const decimalsMap = FAKE_TOKENS.reduce((map, token) => {
+    map[token.symbol] = token.decimals;
+    return map;
+}, {} as Record<string, number>);

@@ -24,7 +24,15 @@ const vaultAprContracts = VAULT_LIST.map((vault) => ({
  * @returns {aprData: VaultAprs | undefined, isLoadingApr: boolean, ...}
  */
 export function useVaultAprs() {
-    const result = useReadContracts({ contracts: vaultAprContracts });
+    const result = useReadContracts({
+        contracts: vaultAprContracts,
+        query: {
+            staleTime: 1000 * 60 * 5, // 5분 동안 데이터 유지 (APR은 자주 변하지 않음)
+            refetchInterval: 1000 * 60 * 10, // 10분마다 백그라운드 업데이트
+            refetchOnWindowFocus: false, // 윈도우 포커스 시 자동 refetch 비활성화
+            refetchOnMount: false, // 마운트 시 자동 refetch 비활성화 (캐시된 데이터 사용)
+        }
+    });
 
     const processedData: VaultAprs | undefined = result.data?.reduce((acc, current, index) => {
         const symbol = VAULT_LIST[index].symbol;

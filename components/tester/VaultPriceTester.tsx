@@ -50,9 +50,9 @@ interface VaultPriceCardProps {
 // 💡 Vault별 TVL은 Vault의 totalAssets()와 가격을 곱해야 하지만,
 //    여기서는 테스트를 위해 임의의 TVL 값과 가격을 조합하여 시뮬레이션합니다.
 const MOCK_TVL_ASSETS = {
-    FBTC: 12.50, // 12.5 BTC 토큰이 Vault에 예치됨
-    FUSDT: 50000.00,
-    FUSDC: 75000.00,
+    BTC: 12.50, // 12.5 BTC 토큰이 Vault에 예치됨
+    USDT: 50000.00,
+    USDC: 75000.00,
 };
 
 // 뼈대(Skeleton) UI 컴포넌트
