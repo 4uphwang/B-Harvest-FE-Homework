@@ -10,7 +10,7 @@ export const VAULT_ABI = [
             type: 'uint256'
         }],
     }, {
-        name: 'totalAssets',
+        name: 'totalAssets', // ERC 4626 기본 함수
         type: 'function',
         stateMutability: 'view',
         inputs: [],

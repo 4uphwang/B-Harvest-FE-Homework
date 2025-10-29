@@ -1,4 +1,4 @@
-import { VAULT_ABI } from 'lib/abi/VaultABI';
+import { VAULT_ABI } from 'lib/config/abi/VaultABI';
 import { Abi } from 'viem';
 import { getTokenBySymbol, Token } from './tokens';
 
@@ -19,23 +19,23 @@ const ADDRESSES = {
 export const VAULT_LIST: Vault[] = [
     {
         name: 'BTC Vault',
-        symbol: 'VBTC',
+        symbol: 'BTC',
         vaultAddress: ADDRESSES.BTC_VAULT,
         vaultAbi: VAULT_ABI as Abi,
-        underlyingToken: getTokenBySymbol('FBTC')!,
+        underlyingToken: getTokenBySymbol('BTC')!,
     },
     {
         name: 'USDT Vault',
-        symbol: 'VUSDT',
+        symbol: 'USDT',
         vaultAddress: ADDRESSES.USDT_VAULT,
         vaultAbi: VAULT_ABI as Abi,
-        underlyingToken: getTokenBySymbol('FUSDT')!,
+        underlyingToken: getTokenBySymbol('USDT')!,
     },
     {
         name: 'USDC Vault',
-        symbol: 'VUSDC',
+        symbol: 'USDC',
         vaultAddress: ADDRESSES.USDC_VAULT,
         vaultAbi: VAULT_ABI as Abi,
-        underlyingToken: getTokenBySymbol('FUSDC')!,
+        underlyingToken: getTokenBySymbol('USDC')!,
     },
 ];

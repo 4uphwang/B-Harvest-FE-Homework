@@ -3,7 +3,7 @@
 
 import { useReadContracts, UseReadContractsReturnType } from 'wagmi';
 
-import { VAULT_ABI } from 'lib/abi';
+import { VAULT_ABI } from 'lib/config/abi';
 import { VAULT_LIST } from 'lib/config/vaults';
 import { VaultAssetAmounts } from 'lib/types/common';
 

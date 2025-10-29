@@ -1,6 +1,6 @@
 'use client';
 
-import { VAULT_ABI } from 'lib/abi';
+import { VAULT_ABI } from 'lib/config/abi';
 import { VAULT_LIST } from 'lib/config/vaults';
 import { useReadContracts } from 'wagmi';
 
