@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.9",
     "@tanstack/react-query": "^5.90.5",
     "@wagmi/connectors": "^6.1.0",
     "jotai": "^2.15.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "viem": "2.x",
     "wagmi": "^2.18.2"
   },

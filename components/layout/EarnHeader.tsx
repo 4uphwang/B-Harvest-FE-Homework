@@ -1,7 +1,7 @@
 'use client';
 
-import { DownArrowIcon, HeaderLogoImage, MenuIcon, ReloadIcon } from 'assets';
-import { truncateAddress } from 'lib/utils/wallet';
+import { HeaderLogoImage, MenuIcon, ReloadIcon } from 'assets';
+import { ConnectWallet } from 'components/wallet/ConnectWallet';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
 
@@ -26,33 +26,20 @@ export const EarnHeader = () => {
                 />
             </div>
 
-            <div className="flex items-center space-x-[6px]">
+            <div className="flex items-center space-x-[6px] relative">
 
                 {/* 1. 새로고침/재시도 버튼 */}
                 <button
                     type="button"
                     aria-label="Reload data"
+                    onClick={() => { window.location.reload() }}
                     className="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-gray-100"
                 >
                     <ReloadIcon className='w-6 h-6 text-primary-base' />
                 </button>
 
                 {/* 2. 주소/지갑 상태 버튼 */}
-                <div className="flex items-center h-8 rounded-full bg-surfaces-on-surface/[12%] px-[6px] gap-x-[5px] cursor-pointer">
-
-
-                    {address
-                        ? <>
-                            <span className={`text-sm font-medium text-surfaces-on-6 overflow-hidden whitespace-nowrap px-[5px]`} >
-                                {truncateAddress(address, 5, 3)}
-                            </span>
-                            <DownArrowIcon className={`w-[14px] h-[14px] text-surfaces-on-6`} />
-                        </>
-                        : <span className={`text-sm font-medium text-surfaces-on-surface `} >
-                            Connect Wallet
-                        </span>
-                    }
-                </div>
+                <ConnectWallet />
 
                 {/* 3. 메뉴 버튼 */}
                 <button

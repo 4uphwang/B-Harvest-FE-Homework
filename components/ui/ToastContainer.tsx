@@ -3,6 +3,7 @@
 import { useAtom, useSetAtom } from 'jotai';
 import { removeToastAtom, toastsAtom } from 'lib/state/toast';
 import React, { useEffect } from 'react';
+import { FiCheckCircle, FiInfo, FiXCircle } from 'react-icons/fi';
 
 export const ToastContainer: React.FC = () => {
     const [toasts] = useAtom(toastsAtom);
@@ -20,10 +21,18 @@ export const ToastContainer: React.FC = () => {
             {toasts.map(t => (
                 <div
                     key={t.id}
-                    className={`px-4 py-2 rounded-lg text-sm shadow-lg ${t.type === 'success' ? 'bg-green-500 text-black' : t.type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-700 text-white'
-                        }`}
+                    className={`group pointer-events-auto flex items-center gap-3 rounded-xl border px-3 py-2 shadow-2xl backdrop-blur transition-all duration-200
+                        ${t.type === 'success' ? 'border-primary-base/40 bg-primary-base/[0.08]' : t.type === 'error' ? 'border-red-500/40 bg-red-500/10' : 'border-darker bg-surfaces-on-surface/[0.06]'}
+                    `}
                 >
-                    {t.message}
+                    <div className="shrink-0">
+                        {t.type === 'success' && <FiCheckCircle className="h-5 w-5 text-primary-base" />}
+                        {t.type === 'error' && <FiXCircle className="h-5 w-5 text-red-400" />}
+                        {t.type === 'info' && <FiInfo className="h-5 w-5 text-surfaces-on-5" />}
+                    </div>
+                    <div className="text-sm text-surfaces-on-surface">
+                        {t.message}
+                    </div>
                 </div>
             ))}
         </div>

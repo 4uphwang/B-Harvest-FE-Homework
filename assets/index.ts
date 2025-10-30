@@ -19,7 +19,9 @@ import BtcImage from './image/BTC.png';
 import HeaderLogoImage from './image/HeaderLogo.png';
 import UsdcImage from './image/USDC.png';
 import UsdtImage from './image/USDT.png';
-
+import MetaMaskWallet from './image/MetamaskWallet.png';
+import BackpackWallet from './image/BackpackWallet.png';
+import OkxWallet from './image/OKXWallet.png';
 
 export {
     // Icons
@@ -40,6 +42,9 @@ export {
     ReloadIcon,
     RightArrowIcon,
     SearchIcon, UsdcImage,
-    UsdtImage
+    UsdtImage,
+    MetaMaskWallet,
+    BackpackWallet,
+    OkxWallet
 };
 
