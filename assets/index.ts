@@ -15,19 +15,18 @@ import { default as SearchIcon } from './icons/Search.svg';
 
 
 // 이미지
-import BtcImage from './image/BTC.png';
-import HeaderLogoImage from './image/HeaderLogo.png';
-import UsdcImage from './image/USDC.png';
-import UsdtImage from './image/USDT.png';
-import MetaMaskWallet from './image/MetamaskWallet.png';
 import BackpackWallet from './image/BackpackWallet.png';
+import BtcImage from './image/BTCIcon.png';
+import HeaderLogoImage from './image/HeaderLogo.png';
+import MetaMaskWallet from './image/MetamaskWallet.png';
 import OkxWallet from './image/OKXWallet.png';
+import UsdcImage from './image/USDCIcon.png';
+import UsdtImage from './image/USDTIcon.png';
 
 export {
     // Icons
     AprIcon,
-    BackIcon,
-
+    BackIcon, BackpackWallet,
     // Images
     BtcImage,
     DownArrowIcon,
@@ -36,15 +35,11 @@ export {
     HomeIcon,
     LeftArrowIcon,
     MarketIcon,
-    MenuIcon,
-    PointIcon,
+    MenuIcon, MetaMaskWallet, OkxWallet, PointIcon,
     PortfolioIcon,
     ReloadIcon,
     RightArrowIcon,
     SearchIcon, UsdcImage,
-    UsdtImage,
-    MetaMaskWallet,
-    BackpackWallet,
-    OkxWallet
+    UsdtImage
 };
 

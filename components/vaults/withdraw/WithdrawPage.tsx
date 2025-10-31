@@ -13,7 +13,9 @@ import { currencyAtom } from 'lib/state/currency';
 import { withdrawInputAtom } from 'lib/state/withdrawInput';
 
 import { LeftArrowIcon } from 'assets';
+import { getTokenImage } from 'lib/utils/tokenImage';
 import { formatApr, getPrice } from 'lib/utils/wallet';
+import Image from 'next/image';
 import { WithdrawActionButton } from './WithdrawActionButton';
 import { WithdrawNumericKeypad } from './WithdrawNumericKeypad';
 
@@ -106,7 +108,16 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                         <div className="flex flex-col gap-y-[6px] text-xl text-surfaces-on-6">
                             <p className="flex items-center gap-x-3">
                                 <span>Withdraw</span>
-                                <span className="mr-1 text-white">💎 {targetVault.symbol}</span>
+                                <div className="flex items-center gap-x-2">
+                                    <Image
+                                        src={getTokenImage(targetVault.symbol)}
+                                        alt={targetVault.symbol}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                    />
+                                    <span className="mr-1 text-white">{targetVault.symbol}</span>
+                                </div>
                             </p>
                             <p className='text-sm text-surfaces-on-3'>
                                 My Supplied:
@@ -117,7 +128,16 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                         <div className="flex flex-col gap-y-[6px]">
                             <p className="flex text-xl items-center gap-x-3 text-surfaces-on-6">
                                 <span>To</span>
-                                <span className="mr-1 text-white">💎 {tokenSymbol}</span>
+                                <div className="flex items-center gap-x-2">
+                                    <Image
+                                        src={getTokenImage(tokenSymbol)}
+                                        alt={tokenSymbol}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                    />
+                                    <span className="mr-1 text-white">{tokenSymbol}</span>
+                                </div>
                             </p>
                             <p className='text-sm text-surfaces-on-3'>
                                 Wallet Balance: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {assetsFormatted} {targetVault.symbol}

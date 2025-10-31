@@ -1,8 +1,9 @@
 // components/vaults/MyVaultCard.tsx
 'use client';
 
-import { AprIcon, BtcImage, UsdcImage, UsdtImage } from 'assets';
+import { AprIcon } from 'assets';
 import { Vault } from 'lib/config/vaults';
+import { getTokenImage } from 'lib/utils/tokenImage';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
@@ -23,14 +24,6 @@ export const MyVaultCard: React.FC<MyVaultCardProps> = ({
     currencySymbol
 }) => {
 
-    // 토큰별 이미지 반환
-    const getTokenImage = () => {
-        if (vault.symbol.includes('BTC')) return BtcImage;
-        if (vault.symbol.includes('USDT')) return UsdtImage;
-        if (vault.symbol.includes('USDC')) return UsdcImage;
-        return BtcImage;
-    };
-
     const isUsdt = vault.symbol.includes('USDT');
 
     return (
@@ -42,7 +35,7 @@ export const MyVaultCard: React.FC<MyVaultCardProps> = ({
             <div className="flex items-center gap-3">
                 <div className="relative">
                     <Image
-                        src={getTokenImage()}
+                        src={getTokenImage(vault.symbol)}
                         alt={vault.symbol}
                         width={24}
                         height={24}
