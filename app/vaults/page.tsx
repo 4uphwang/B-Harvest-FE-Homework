@@ -12,6 +12,7 @@ import RightIcon from 'assets/icons/RightArrow.svg';
 import { EarnHeader } from 'components/layout/EarnHeader';
 import { UserSummaryCard } from 'components/vaults/UserSummaryCard';
 import VaultListContainer from 'components/vaults/VaultListContainer';
+import Link from 'next/link';
 
 export default function VaultListPage() {
     const { isConnected } = useAccount();
@@ -45,13 +46,13 @@ export default function VaultListPage() {
 
                 <div className="flex flex-col gap-y-4 ">
 
-                    <div className='flex items-center'>
+                    <Link href="/vaults/my" className='flex items-center'>
                         <div className='flex items-center gap-x-1'>
                             <h2 className='text-surfaces-on-surface text-lg font-medium'>View My Vaults</h2>
                             <span className='text-md text-surfaces-on-3'>({myVaultsCount})</span>
                         </div>
                         <RightIcon width={18} height={18} className="text-surfaces-on-surface" />
-                    </div>
+                    </Link>
                     <UserSummaryCard isConnected={isConnected} />
                 </div>
 

@@ -2,48 +2,48 @@
 
 import { VAULT_ABI } from 'lib/config/abi';
 import { VAULT_LIST } from 'lib/config/vaults';
+import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 
-/**
- * 모든 Vault의 심볼을 키로, BigInt 타입의 APR 값을 값으로 가지는 맵
- * APR 값은 컨트랙트에서 반환되는 스케일링된 값입니다 (예: 10^18)
- */
 export type VaultAprs = Record<string, bigint>;
-
-// useReadContracts에 필요한 계약 호출 정보 배열 생성
-const vaultAprContracts = VAULT_LIST.map((vault) => ({
-    address: vault.vaultAddress as `0x${string}`,
-    abi: VAULT_ABI,
-    functionName: 'getAPR' as const,
-}));
-
-
-
 /**
  * 모든 Vault의 getAPR() 값을 조회하는 훅
  * @returns {aprData: VaultAprs | undefined, isLoadingApr: boolean, ...}
  */
 export function useVaultAprs() {
+    const contracts = useMemo(() =>
+        VAULT_LIST.map((vault) => ({
+            address: vault.vaultAddress as `0x${string}`,
+            abi: VAULT_ABI,
+            functionName: 'getAPR' as const,
+        })), []
+    );
+
     const result = useReadContracts({
-        contracts: vaultAprContracts,
+        contracts,
         query: {
-            staleTime: 1000 * 60 * 5, // 5분 동안 데이터 유지 (APR은 자주 변하지 않음)
-            refetchInterval: 1000 * 60 * 10, // 10분마다 백그라운드 업데이트
-            refetchOnWindowFocus: false, // 윈도우 포커스 시 자동 refetch 비활성화
-            refetchOnMount: false, // 마운트 시 자동 refetch 비활성화 (캐시된 데이터 사용)
+            staleTime: 1000 * 60 * 5,
+            refetchInterval: 1000 * 60 * 10,
+            refetchOnWindowFocus: false,
+            refetchOnMount: false,
         }
     });
 
     const processedData: VaultAprs | undefined = result.data?.reduce((acc, current, index) => {
-        const symbol = VAULT_LIST[index].symbol;
+        const vault = VAULT_LIST[index];
+        if (!vault) return acc; // 안전성 체크 추가
+
+        const symbol = vault.symbol;
         if (current.status === 'success' && typeof current.result === 'bigint') {
             acc[symbol] = current.result;
         } else {
             acc[symbol] = 0n;
+            if (current.status === 'failure') {
+                console.warn(`Failed to fetch APR for ${symbol} (${vault.vaultAddress}):`, current.error);
+            }
         }
         return acc;
     }, {} as Record<string, bigint>);
-
     return {
         ...result,
         aprData: processedData,

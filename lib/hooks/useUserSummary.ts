@@ -6,7 +6,7 @@ import { VAULT_LIST, Vault } from 'lib/config/vaults';
 import { useCoinPrices } from 'lib/hooks/useCoinPrices';
 import { useVaultAprs } from 'lib/hooks/useVaultAprs';
 import { currencyAtom } from 'lib/state/currency';
-import { getPrice } from 'lib/utils/wallet';
+import { formatApr, getPrice } from 'lib/utils/wallet';
 import { formatUnits } from 'viem';
 import { useAccount, useReadContracts } from 'wagmi';
 
@@ -25,7 +25,6 @@ export function useUserSummary() {
     const { aprData } = useVaultAprs();
     const { data: prices } = useCoinPrices(currency);
 
-    // 1) balanceOf for all vaults
     const { data: balancesResult } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault) => ({
             address: vault.vaultAddress,
@@ -44,7 +43,6 @@ export function useUserSummary() {
         r?.status === 'success' && typeof r.result === 'bigint' ? r.result : 0n
     ));
 
-    // 2) convertToAssets for all non-zero shares
     const { data: assetsResult } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault, idx) => ({
             address: vault.vaultAddress,
@@ -68,14 +66,13 @@ export function useUserSummary() {
         const price = getPrice(vault.underlyingToken.symbol, prices, currency) || 0;
         const value = parseFloat(assetsFormatted || '0') * price;
         const aprRaw = aprData?.[vault.symbol];
-        const apr = aprRaw ? Number(aprRaw) : 0; // 이미 퍼센트 스케일이라고 가정 (필요시 스케일 변환 추가)
+        const apr = aprRaw ? Number(formatApr(aprRaw)) : 0;
 
         return { vault, shares, assets, assetsFormatted, value, apr };
     });
 
     const totalValue = perVault.reduce((sum, v) => sum + (isFinite(v.value) ? v.value : 0), 0);
 
-    // 가중 평균 APY = sum(value_i * apr_i) / sum(value_i)
     const weightedApr = (() => {
         const numerator = perVault.reduce((sum, v) => sum + (v.value || 0) * (v.apr || 0), 0);
         if (totalValue <= 0) return 0;

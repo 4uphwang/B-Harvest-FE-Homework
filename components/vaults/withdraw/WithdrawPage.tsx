@@ -3,43 +3,38 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { Vault } from 'lib/config/vaults';
 import { useCoinPrices } from 'lib/hooks/useCoinPrices';
 import { useVaultAprs } from 'lib/hooks/useVaultAprs';
 import { useVaultBalance } from 'lib/hooks/useVaultBalance';
 import { currencyAtom } from 'lib/state/currency';
-import { supplyInputAtom } from 'lib/state/supplyInput';
+import { withdrawInputAtom } from 'lib/state/withdrawInput';
 
 import { LeftArrowIcon } from 'assets';
 import { formatApr, getPrice } from 'lib/utils/wallet';
-import { DepositActionButton } from './DepositActionButton';
-import { NumericKeypad } from './NumericKeypad';
+import { WithdrawActionButton } from './WithdrawActionButton';
+import { WithdrawNumericKeypad } from './WithdrawNumericKeypad';
 
-interface SupplyPageProps {
+interface WithdrawPageProps {
     targetVault: Vault;
 }
 
-export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
+export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
     const { isConnected, address } = useAccount();
-    const inputAmount = useAtomValue(supplyInputAtom);
-    const setInputAmount = useSetAtom(supplyInputAtom);
+    const inputAmount = useAtomValue(withdrawInputAtom);
+    const setInputAmount = useSetAtom(withdrawInputAtom);
     const router = useRouter();
     const currency = useAtomValue(currencyAtom);
 
-    const { data: balanceData } = useBalance({
-        address,
-        token: targetVault.underlyingToken.address,
-        query: { enabled: isConnected, staleTime: 5000 },
-    });
     const { aprData, isLoadingApr, isErrorApr } = useVaultAprs();
     const { assetsFormatted, isLoading: isLoadingVaultBalance } = useVaultBalance(
         targetVault.vaultAddress,
         targetVault.symbol
     );
     const { data: pricesData } = useCoinPrices(currency);
-    const walletBalanceFormatted = balanceData?.formatted || '0.00';
+    const vaultBalanceFormatted = assetsFormatted || '0.00';
     const tokenSymbol = targetVault.underlyingToken.symbol;
 
     // 토큰 가격 계산
@@ -48,7 +43,7 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
         return getPrice(tokenSymbol, pricesData, currency);
     }, [pricesData, tokenSymbol, currency]);
 
-    // 공급한 자산의 가치 계산
+    // Vault에 공급한 자산의 가치 계산
     const suppliedValue = useMemo(() => {
         if (!assetsFormatted || assetsFormatted === '0.00' || !tokenPrice) return '0.00';
         const value = parseFloat(assetsFormatted) * tokenPrice;
@@ -65,10 +60,10 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
     // 잔액 초과 여부 계산
     const exceedsBalance = useMemo(() => {
         const inNum = Number(inputAmount || 0);
-        const balNum = Number(walletBalanceFormatted || 0);
+        const balNum = Number(vaultBalanceFormatted || 0);
         if (isNaN(inNum) || isNaN(balNum)) return false;
         return inNum > balNum;
-    }, [inputAmount, walletBalanceFormatted]);
+    }, [inputAmount, vaultBalanceFormatted]);
 
     const formatAPR = () => {
         if (!aprData || !aprData[targetVault.symbol]) return '0.00';
@@ -110,22 +105,22 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
                     <div className='flex flex-col gap-y-7'>
                         <div className="flex flex-col gap-y-[6px] text-xl text-surfaces-on-6">
                             <p className="flex items-center gap-x-3">
-                                <span>Supply</span>
-                                <span className="mr-1 text-white">💎 {tokenSymbol}</span>
+                                <span>Withdraw</span>
+                                <span className="mr-1 text-white">💎 {targetVault.symbol}</span>
                             </p>
                             <p className='text-sm text-surfaces-on-3'>
-                                Wallet Balance:
-                                <span className="text-surfaces-on-8">{isConnected ? walletBalanceFormatted : '--'} {tokenSymbol}</span>
+                                My Supplied:
+                                <span className="text-surfaces-on-8">{isConnected ? vaultBalanceFormatted : '--'} {targetVault.symbol}</span>
                             </p>
                         </div>
 
                         <div className="flex flex-col gap-y-[6px]">
                             <p className="flex text-xl items-center gap-x-3 text-surfaces-on-6">
                                 <span>To</span>
-                                <span className="mr-1 text-white">💎 {targetVault.symbol}</span>
+                                <span className="mr-1 text-white">💎 {tokenSymbol}</span>
                             </p>
                             <p className='text-sm text-surfaces-on-3'>
-                                My Supplied: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {assetsFormatted} {targetVault.symbol}
+                                Wallet Balance: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {assetsFormatted} {targetVault.symbol}
                             </p>
                         </div>
                     </div>
@@ -140,24 +135,25 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
                     </div>
                     {exceedsBalance && (
                         <div className="text-xs text-red-500 -mt-1">
-                            입력 금액이 지갑 잔액을 초과했습니다.
+                            입력 금액이 Vault 잔액을 초과했습니다.
                         </div>
                     )}
                 </div>
 
                 <button
-                    onClick={() => setInputAmount(walletBalanceFormatted)}
+                    onClick={() => setInputAmount(vaultBalanceFormatted)}
                     className="text-xs bg-[#ECEFEC1F] text-gray-300 w-fit p-[6px] rounded-md self-start hover:bg-gray-600 transition"
                 >
-                    Use Balance {walletBalanceFormatted} {tokenSymbol}
+                    Use Balance {vaultBalanceFormatted} {targetVault.symbol}
                 </button>
 
                 <div className="flex-1" />
 
             </main>
-            <DepositActionButton vault={targetVault} maxAmount={walletBalanceFormatted} />
+            <WithdrawActionButton vault={targetVault} maxAmount={vaultBalanceFormatted} />
 
-            <NumericKeypad decimals={targetVault.underlyingToken.decimals} />
+            <WithdrawNumericKeypad decimals={targetVault.underlyingToken.decimals} />
         </div>
     );
 };
+

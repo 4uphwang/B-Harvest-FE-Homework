@@ -7,7 +7,7 @@ import { VAULT_LIST } from "lib/config/vaults";
 import { useVaultAssets } from "lib/hooks/useValueAssets";
 import { useVaultAprs } from "lib/hooks/useVaultAprs";
 import { currencySymbolAtom } from "lib/state/currency";
-import { formatCurrency } from "lib/utils/wallet";
+import { formatApr, formatCurrency } from "lib/utils/wallet";
 import { useMemo, useState } from "react";
 import { VaultCard } from "./VaultCard";
 
@@ -34,9 +34,7 @@ export default function VaultListContainer() {
 
     const formatVaultAPR = (vaultSymbol: string) => {
         if (!aprData || !aprData[vaultSymbol]) return "0.00";
-
-        const rawAPR = aprData[vaultSymbol];
-        return Number(rawAPR).toFixed(2);
+        return formatApr(aprData[vaultSymbol]);
     };
 
     return (

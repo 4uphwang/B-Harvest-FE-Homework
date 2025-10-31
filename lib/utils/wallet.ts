@@ -3,6 +3,7 @@ import { CURRENCY_MAP } from "lib/config/currencyConfig";
 import { CoinPrices, Currency } from "lib/types/common";
 import { chains, config } from "provider/config";
 import { switchChain } from "wagmi/actions";
+import { formatUnits } from "viem";
 
 /**
  * 주소 문자열을 좌우 지정된 길이로 자르고 가운데를 "..."으로 생략.
@@ -129,6 +130,24 @@ export const formatCompactCurrency = (currencySymbol: string, value: number, dec
     const currencyEntry = Object.entries(CURRENCY_MAP).find(([_, sym]) => sym === currencySymbol);
     const currencyKey = (currencyEntry?.[0] as Currency) || 'usd';
     return `${currencySymbol}${formatCompactNumber(value, decimals, { currency: currencyKey })}`;
+};
+
+/**
+ * Vault APR 값을 퍼센트 형식으로 포맷팅합니다.
+ * APR은 컨트랙트에서 이미 퍼센트 단위로 반환됩니다 (예: 500 = 5.00%).
+ * @param aprBigInt BigInt 타입의 APR 값
+ * @returns 포맷팅된 APR 문자열 (예: "5.00")
+ */
+export const formatApr = (aprBigInt: bigint | undefined): string => {
+    if (!aprBigInt || aprBigInt === 0n) return '0.00';
+    try {
+        // APR은 decimals=0으로 저장되므로 formatUnits(aprBigInt, 0) 사용
+        const formattedApr = formatUnits(aprBigInt, 0);
+        // 소수점 2자리로 포맷팅
+        return Number(formattedApr).toFixed(2);
+    } catch {
+        return '0.00';
+    }
 };
 
 

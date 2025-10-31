@@ -9,20 +9,7 @@ import { useVaultAssets } from 'lib/hooks/useValueAssets';
 import { useVaultAprs } from 'lib/hooks/useVaultAprs';
 import { currencyAtom, currencySymbolAtom } from 'lib/state/currency';
 import { CoinPrices, Currency } from 'lib/types/common';
-import { formatUnits } from 'viem';
-
-const formatApr = (aprBigInt: bigint): string => {
-    if (aprBigInt === 0n) return '0.00';
-    try {
-        const formattedApr = formatUnits(aprBigInt, 0);
-
-        // 20.00% 형식으로 맞추기 위해 Number로 변환 후 toFixed(2) 적용
-        return Number(formattedApr).toFixed(2);
-
-    } catch {
-        return '---';
-    }
-};
+import { formatApr } from 'lib/utils/wallet';
 
 const getPrice = (symbol: string, prices: CoinPrices | undefined, currency: Currency): number => {
     if (!prices) return 0;
@@ -43,7 +30,7 @@ interface VaultPriceCardProps {
     vault: Vault;
     priceUsd: number;
     currencySymbol: string;
-    assetAmount: bigint;
+    assetAmount: string; // formatted token amount string
     aprValue: bigint;
 }
 
@@ -67,9 +54,9 @@ const SkeletonCard = () => (
 
 
 const VaultPriceCard = ({ vault, priceUsd, currencySymbol, assetAmount, aprValue }: VaultPriceCardProps) => {
-    const { symbol: tokenSymbol, decimals } = vault.underlyingToken;
+    const { symbol: tokenSymbol } = vault.underlyingToken;
 
-    const tokenAmountString = formatUnits(assetAmount, decimals);
+    const tokenAmountString = assetAmount;
     const tokenAmount = Number(tokenAmountString);
     const tvl = tokenAmount * priceUsd;
 
@@ -160,7 +147,7 @@ export default function VaultPriceTester() {
                             vault={vault}
                             priceUsd={priceUsd}
                             currencySymbol={currencySymbol}
-                            assetAmount={assetAmounts[vault.symbol] || 0n}
+                            assetAmount={assetAmounts[vault.symbol] || '0'}
                             aprValue={aprData[vault.symbol] || 0n}
                         />
                     );

@@ -68,4 +68,27 @@ export const VAULT_ABI = [
             type: 'uint256'
         }],
     },
+    {
+        name: 'withdraw', // ERC-4626 표준: Assets를 출금
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [{
+            internalType: 'uint256',
+            name: 'assets',
+            type: 'uint256'
+        }, {
+            internalType: 'address',
+            name: 'receiver',
+            type: 'address'
+        }, {
+            internalType: 'address',
+            name: 'owner',
+            type: 'address'
+        }],
+        outputs: [{
+            internalType: 'uint256',
+            name: 'shares',
+            type: 'uint256'
+        }],
+    },
 ] as const;
