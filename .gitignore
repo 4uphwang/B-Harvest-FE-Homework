@@ -36,6 +36,21 @@ yarn-error.log*
 # vercel
 .vercel
 
+# opennext
+.open-next
+
+# CDK
+cdk.out
+
+# SST
+.sst
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# sst
+.sst
+
+# open-next
+.open-next
