@@ -25,7 +25,7 @@ export function useUserSummary() {
     const { aprData, isLoadingApr } = useVaultAprs();
     const { data: prices, isLoading: isLoadingPrices } = useCoinPrices(currency);
 
-    const { data: balancesResult, isLoading: isLoadingBalances } = useReadContracts({
+    const { data: balancesResult, isLoading: isLoadingBalances, refetch: refetchBalances } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault) => ({
             address: vault.vaultAddress,
             abi: VAULT_ABI,
@@ -43,7 +43,7 @@ export function useUserSummary() {
         r?.status === 'success' && typeof r.result === 'bigint' ? r.result : 0n
     ));
 
-    const { data: assetsResult, isLoading: isLoadingAssets } = useReadContracts({
+    const { data: assetsResult, isLoading: isLoadingAssets, refetch: refetchAssets } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault, idx) => ({
             address: vault.vaultAddress,
             abi: VAULT_ABI,
@@ -81,12 +81,22 @@ export function useUserSummary() {
 
     const isLoading = (isConnected && (isLoadingBalances || isLoadingAssets)) || isLoadingApr || isLoadingPrices;
 
+    // Refetch 함수: 사용자 vault 잔액을 다시 조회
+    const refetch = async () => {
+        // balances를 먼저 refetch하고, 그 다음 assets를 refetch
+        await refetchBalances();
+        // sharesArray가 업데이트되면 assets도 자동으로 refetch될 수 있지만,
+        // 명시적으로 호출하여 확실히 업데이트
+        await refetchAssets();
+    };
+
     return {
         isConnected,
         perVault,
         totalValue,
         totalApr: weightedApr,
         isLoading,
+        refetch,
     };
 }
 

@@ -1,11 +1,13 @@
 // app/vaults/page.tsx
 'use client';
 
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useTotalSupplyValue } from 'lib/hooks/useTotalSupplyValue';
 import { useUserSummary } from 'lib/hooks/useUserSummary';
 import { currencySymbolAtom } from 'lib/state/currency';
+import { userSummaryRefetchAtom } from 'lib/state/userSummaryRefetch';
 import { formatCompactCurrency } from 'lib/utils/wallet';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import RightIcon from 'assets/icons/RightArrow.svg';
@@ -15,11 +17,30 @@ import VaultListContainer from 'components/vaults/VaultListContainer';
 import Link from 'next/link';
 
 export default function VaultListPage() {
+    const [isMounted, setIsMounted] = useState(false);
     const { isConnected } = useAccount();
     const currencySymbol = useAtomValue(currencySymbolAtom);
-    const { totalValue, perVault } = useUserSummary();
+    const { totalValue, perVault, refetch } = useUserSummary();
     const { totalSupplyValue, isLoading: isLoadingSupply, isError: isErrorSupply } = useTotalSupplyValue();
-    const myVaultsCount = perVault.filter(v => v.assets > 0n).length;
+    const setUserSummaryRefetch = useSetAtom(userSummaryRefetchAtom);
+
+    // 클라이언트 마운트 확인 (Hydration 에러 방지)
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // 서버 렌더링 시 안전한 기본값 사용 (Hydration 에러 방지)
+    const myVaultsCount = isMounted ? perVault.filter(v => v.assets > 0n).length : 0;
+
+    // refetch 함수를 전역 atom에 등록
+    useEffect(() => {
+        if (refetch) {
+            setUserSummaryRefetch(() => refetch);
+        }
+        return () => {
+            setUserSummaryRefetch(null);
+        };
+    }, [refetch, setUserSummaryRefetch]);
 
     return (
         <div>
@@ -55,11 +76,13 @@ export default function VaultListPage() {
                     <Link href="/vaults/my" className='flex items-center'>
                         <div className='flex items-center gap-x-1'>
                             <h2 className='text-surfaces-on-surface text-lg font-medium'>View My Vaults</h2>
-                            <span className='text-md text-surfaces-on-3'>({myVaultsCount})</span>
+                            <span className='text-md text-surfaces-on-3'>
+                                {isMounted ? `(${myVaultsCount})` : '(0)'}
+                            </span>
                         </div>
                         <RightIcon width={18} height={18} className="text-surfaces-on-surface" />
                     </Link>
-                    <UserSummaryCard isConnected={isConnected} />
+                    <UserSummaryCard isConnected={isMounted ? isConnected : false} />
                 </div>
 
                 {/* 3. All Vaults List */}

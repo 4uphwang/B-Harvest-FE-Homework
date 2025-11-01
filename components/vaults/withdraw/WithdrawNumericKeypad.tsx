@@ -7,9 +7,10 @@ import React from 'react';
 
 interface WithdrawNumericKeypadProps {
     decimals?: number;
+    disabled?: boolean;
 }
 
-export const WithdrawNumericKeypad: React.FC<WithdrawNumericKeypadProps> = ({ decimals = 6 }) => {
+export const WithdrawNumericKeypad: React.FC<WithdrawNumericKeypadProps> = ({ decimals = 6, disabled = false }) => {
     const [input, setInput] = useAtom(withdrawInputAtom);
 
     const handleKeyClick = (value: string) => {
@@ -52,12 +53,13 @@ export const WithdrawNumericKeypad: React.FC<WithdrawNumericKeypadProps> = ({ de
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'];
 
     return (
-        <div className="grid grid-cols-3 py-[6px] bg-black text-surfaces-on-8 mb-3">
+        <div className={`grid grid-cols-3 py-[6px] bg-black text-surfaces-on-8 mb-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
             {keys.map(key => (
                 <button
                     key={key}
                     onClick={() => handleKeyClick(key)}
-                    className="h-16 text-2xl p-[10px] font-normal rounded-lg active:bg-surfaces-on-background active:text-black transition"
+                    disabled={disabled}
+                    className="h-16 text-2xl p-[10px] font-normal rounded-lg active:bg-surfaces-on-background active:text-black transition disabled:cursor-not-allowed"
                 >
                     {key === 'DEL' ? <BackIcon className="w-6 h-6 mx-auto" /> : key}
                 </button>

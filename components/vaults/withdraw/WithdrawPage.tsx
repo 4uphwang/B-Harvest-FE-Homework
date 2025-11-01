@@ -1,9 +1,11 @@
 'use client';
 
 import { useAtomValue, useSetAtom } from 'jotai';
+import { calculateMaxAmountWithGas } from 'lib/utils/gas';
 import { useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
-import { useAccount } from 'wagmi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { formatUnits } from 'viem';
+import { useAccount, useBalance } from 'wagmi';
 
 import { Vault } from 'lib/config/vaults';
 import { useCoinPrices } from 'lib/hooks/useCoinPrices';
@@ -29,13 +31,45 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
     const setInputAmount = useSetAtom(withdrawInputAtom);
     const router = useRouter();
     const currency = useAtomValue(currencyAtom);
+    const [isProcessing, setIsProcessing] = useState(false);
 
+    useEffect(() => {
+        setInputAmount('0.00');
+        return () => {
+            setInputAmount('0.00');
+        };
+    }, [setInputAmount]);
+
+    const { data: balanceData, isLoading: isLoadingWalletBalance } = useBalance({
+        address,
+        token: targetVault.underlyingToken.address,
+        query: { enabled: isConnected, staleTime: 5000 },
+    });
+
+    // Get native token (ETH) balance for gas fee calculation
+    const { data: nativeBalanceData } = useBalance({
+        address,
+        query: { enabled: isConnected, staleTime: 5000 },
+    });
     const { aprData, isLoadingApr, isErrorApr } = useVaultAprs();
     const { assetsFormatted, isLoading: isLoadingVaultBalance } = useVaultBalance(
         targetVault.vaultAddress,
         targetVault.symbol
     );
     const { data: pricesData, isLoading: isLoadingPrices } = useCoinPrices(currency);
+    const walletBalanceFormatted = useMemo(() => {
+        if (balanceData && balanceData.value && balanceData.decimals) {
+            const formatted = formatUnits(balanceData.value, balanceData.decimals);
+            // 소수점 자리수를 6자리로 제한 (비트코인 등 긴 소수점 방지)
+            const num = parseFloat(formatted);
+            if (isNaN(num) || num === 0) return '0.00';
+            // 소수점 이하 불필요한 0 제거
+            const fixed = num.toFixed(6);
+            const trimmed = fixed.replace(/\.?0+$/, '');
+            return trimmed || '0.00';
+        }
+        return '0.00';
+    }, [balanceData]);
     const vaultBalanceFormatted = assetsFormatted || '0.00';
     const tokenSymbol = targetVault.underlyingToken.symbol;
 
@@ -52,6 +86,13 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
         return value.toFixed(2);
     }, [assetsFormatted, tokenPrice]);
 
+    // Calculate value of wallet balance
+    const walletBalanceValue = useMemo(() => {
+        if (!walletBalanceFormatted || walletBalanceFormatted === '0.00' || !tokenPrice) return '0.00';
+        const value = parseFloat(walletBalanceFormatted) * tokenPrice;
+        return value.toFixed(2);
+    }, [walletBalanceFormatted, tokenPrice]);
+
     // Calculate value of input amount
     const inputAmountValue = useMemo(() => {
         if (!inputAmount || inputAmount === '0.00' || !tokenPrice) return '0.00';
@@ -59,7 +100,7 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
         return value.toFixed(2);
     }, [inputAmount, tokenPrice]);
 
-    // Check if input exceeds balance
+    // Check if input exceeds balance (use vault balance for withdraw)
     const exceedsBalance = useMemo(() => {
         const inNum = Number(inputAmount || 0);
         const balNum = Number(vaultBalanceFormatted || 0);
@@ -74,11 +115,12 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
 
     const aprValue = formatAPR();
 
-    // Combine all loading states
-    const isLoading = isLoadingApr || isLoadingVaultBalance || isLoadingPrices;
+    // 캐시된 데이터가 하나라도 있으면 스켈레톤 표시하지 않음
+    // 모든 데이터가 없고, 모든 로딩이 완료되지 않았을 때만 스켈레톤 표시
+    const hasAnyCachedData = aprData || assetsFormatted || pricesData || vaultBalanceFormatted !== '0.00';
+    const isInitialLoading = !hasAnyCachedData && (isLoadingApr || isLoadingVaultBalance || isLoadingPrices);
 
-    // Early return with skeleton if any data is loading
-    if (isLoading) {
+    if (isInitialLoading) {
         return (
             <div className="flex flex-col h-screen bg-black">
                 <header className="p-4 h-16 flex justify-between items-center bg-black">
@@ -150,8 +192,7 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                                 </span>
                             </div>
                             <p className='text-sm text-surfaces-on-3'>
-                                My Supplied:
-                                <span className="text-surfaces-on-8">{isConnected ? vaultBalanceFormatted : '--'} {targetVault.symbol}</span>
+                                My Supplied: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {isConnected ? vaultBalanceFormatted : '--'} {targetVault.symbol}
                             </p>
                         </div>
 
@@ -170,39 +211,57 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                                 </span>
                             </div>
                             <p className='text-sm text-surfaces-on-3'>
-                                Wallet Balance: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {assetsFormatted} {targetVault.symbol}
+                                Wallet Balance: <span className="mx-1 text-surfaces-on-8">${walletBalanceValue} </span> {walletBalanceFormatted} {tokenSymbol}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-end mb-2">
-                        <div className="text-[40px] font-medium text-white">
-                            {inputAmount || '0.00'}
+                    <div className='flex flex-col'>
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="text-[40px] font-medium text-white">
+                                {inputAmount || '0.00'}
+                            </div>
+                            <div className="text-[28px] text-surfaces-on-surface/[40%]">
+                                ~${inputAmountValue}
+                            </div>
                         </div>
-                        <div className="text-[28px] text-surfaces-on-surface/[40%]">
-                            ~${inputAmountValue}
-                        </div>
+                        {exceedsBalance && (
+                            <div className="text-xs text-red-500 mt-[6px]">
+                                Input amount exceeds vault balance.
+                            </div>
+                        )}
                     </div>
-                    {exceedsBalance && (
-                        <div className="text-xs text-red-500 -mt-1">
-                            Input amount exceeds vault balance.
-                        </div>
-                    )}
+
                 </div>
 
                 <button
-                    onClick={() => setInputAmount(vaultBalanceFormatted)}
+                    onClick={() => {
+                        const maxAmount = calculateMaxAmountWithGas(
+                            vaultBalanceFormatted,
+                            nativeBalanceData?.value,
+                            '0.001', // Withdraw gas estimate
+                            targetVault.underlyingToken.decimals
+                        );
+                        setInputAmount(maxAmount);
+                    }}
                     className="text-xs bg-[#ECEFEC1F] text-gray-300 w-fit p-[6px] rounded-md self-start hover:bg-gray-600 transition"
                 >
-                    Use Balance {vaultBalanceFormatted} {targetVault.symbol}
+                    Use Max {isConnected ? vaultBalanceFormatted : ''} {targetVault.symbol}
                 </button>
 
                 <div className="flex-1" />
 
             </main>
-            <WithdrawActionButton vault={targetVault} maxAmount={vaultBalanceFormatted} />
+            <WithdrawActionButton
+                vault={targetVault}
+                maxAmount={vaultBalanceFormatted}
+                onProcessingChange={setIsProcessing}
+            />
 
-            <WithdrawNumericKeypad decimals={targetVault.underlyingToken.decimals} />
+            <WithdrawNumericKeypad
+                decimals={targetVault.underlyingToken.decimals}
+                disabled={isProcessing}
+            />
         </div>
     );
 };

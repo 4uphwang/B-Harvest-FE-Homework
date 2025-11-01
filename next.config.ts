@@ -35,28 +35,25 @@ const nextConfig: NextConfig = {
     compiler: {
         styledComponents: true,
     },
-    experimental: {
-        turbo: {
-            rules: {
-                '*.svg': {
-                    loaders: [
-                        {
-                            loader: '@svgr/webpack',
-                            options: {
-                                svgo: false,
-                                dimensions: false, // 이 부분을 명시적으로 추가해야 합니다.
-                            }
-                        }
-                    ],
-                    as: '*.js',
-                },
-            },
-        },
-    },
-    output: 'standalone',
-    images: {
-        unoptimized: true,
-    },
+    // experimental: {
+    //     turbo: {
+    //         rules: {
+    //             '*.svg': {
+    //                 loaders: [
+    //                     {
+    //                         loader: '@svgr/webpack',
+    //                         options: {
+    //                             svgo: false,
+    //                             dimensions: false,
+    //                         }
+    //                     }
+    //                 ],
+    //                 as: '*.js',
+    //             },
+    //         },
+    //     },
+    // },
+    output: 'standalone', //lambda에서 사용하기 위해 필요
 };
 
 export default nextConfig;

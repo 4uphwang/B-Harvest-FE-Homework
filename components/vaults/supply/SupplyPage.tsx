@@ -1,8 +1,9 @@
 'use client';
 
 import { useAtomValue, useSetAtom } from 'jotai';
+import { calculateMaxAmountWithGas } from 'lib/utils/gas';
 import { useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 
 import { Vault } from 'lib/config/vaults';
@@ -16,6 +17,7 @@ import { LeftArrowIcon } from 'assets';
 import { getTokenImage } from 'lib/utils/tokenImage';
 import { formatApr, getPrice } from 'lib/utils/wallet';
 import Image from 'next/image';
+import { formatUnits } from 'viem';
 import { DepositActionButton } from './DepositActionButton';
 import { NumericKeypad } from './NumericKeypad';
 
@@ -29,10 +31,24 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
     const setInputAmount = useSetAtom(supplyInputAtom);
     const router = useRouter();
     const currency = useAtomValue(currencyAtom);
+    const [isProcessing, setIsProcessing] = React.useState(false);
+
+    useEffect(() => {
+        setInputAmount('0.00');
+        return () => {
+            setInputAmount('0.00');
+        };
+    }, [setInputAmount]);
 
     const { data: balanceData, isLoading: isLoadingWalletBalance } = useBalance({
         address,
         token: targetVault.underlyingToken.address,
+        query: { enabled: isConnected, staleTime: 5000 },
+    });
+
+    // Get native token (ETH) balance for gas fee calculation
+    const { data: nativeBalanceData } = useBalance({
+        address,
         query: { enabled: isConnected, staleTime: 5000 },
     });
     const { aprData, isLoadingApr, isErrorApr } = useVaultAprs();
@@ -41,7 +57,20 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
         targetVault.symbol
     );
     const { data: pricesData, isLoading: isLoadingPrices } = useCoinPrices(currency);
-    const walletBalanceFormatted = balanceData?.formatted || '0.00';
+
+    const walletBalanceFormatted = useMemo(() => {
+        if (balanceData && balanceData.value && balanceData.decimals) {
+            const formatted = formatUnits(balanceData.value, balanceData.decimals);
+            // 소수점 자리수를 6자리로 제한 (비트코인 등 긴 소수점 방지)
+            const num = parseFloat(formatted);
+            if (isNaN(num) || num === 0) return '0.00';
+            // 소수점 이하 불필요한 0 제거
+            const fixed = num.toFixed(6);
+            const trimmed = fixed.replace(/\.?0+$/, '');
+            return trimmed || '0.00';
+        }
+        return '0.00';
+    }, [balanceData]);
     const tokenSymbol = targetVault.underlyingToken.symbol;
 
     // Calculate token price
@@ -79,11 +108,12 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
 
     const aprValue = formatAPR();
 
-    // Combine all loading states
-    const isLoading = isLoadingApr || isLoadingVaultBalance || isLoadingPrices || (isConnected && isLoadingWalletBalance);
+    // 캐시된 데이터가 하나라도 있으면 스켈레톤 표시하지 않음
+    // 모든 데이터가 없고, 모든 로딩이 완료되지 않았을 때만 스켈레톤 표시
+    const hasAnyCachedData = aprData || assetsFormatted || pricesData || walletBalanceFormatted !== '0.00';
+    const isInitialLoading = !hasAnyCachedData && (isLoadingApr || isLoadingVaultBalance || isLoadingPrices || (isConnected && isLoadingWalletBalance));
 
-    // Early return with skeleton if any data is loading
-    if (isLoading) {
+    if (isInitialLoading) {
         return (
             <div className="flex flex-col h-screen bg-black">
                 <header className="p-4 h-16 flex justify-between items-center bg-black">
@@ -180,34 +210,51 @@ export const SupplyPage: React.FC<SupplyPageProps> = ({ targetVault }) => {
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-end mb-2">
-                        <div className="text-[40px] font-medium text-white">
-                            {inputAmount || '0.00'}
+                    <div className='flex flex-col'>
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="text-[40px] font-medium text-white">
+                                {inputAmount || '0.00'}
+                            </div>
+                            <div className="text-[28px] text-surfaces-on-surface/[40%]">
+                                ~${inputAmountValue}
+                            </div>
                         </div>
-                        <div className="text-[28px] text-surfaces-on-surface/[40%]">
-                            ~${inputAmountValue}
-                        </div>
+                        {exceedsBalance && (
+                            <div className="text-xs text-red-500 mt-[6px]">
+                                Input amount exceeds wallet balance.
+                            </div>
+                        )}
                     </div>
-                    {exceedsBalance && (
-                        <div className="text-xs text-red-500 -mt-1">
-                            Input amount exceeds wallet balance.
-                        </div>
-                    )}
                 </div>
 
                 <button
-                    onClick={() => setInputAmount(walletBalanceFormatted)}
+                    onClick={() => {
+                        const maxAmount = calculateMaxAmountWithGas(
+                            walletBalanceFormatted,
+                            nativeBalanceData?.value,
+                            '0.002', // Approve + Deposit gas estimate
+                            targetVault.underlyingToken.decimals
+                        );
+                        setInputAmount(maxAmount);
+                    }}
                     className="text-xs bg-[#ECEFEC1F] text-gray-300 w-fit p-[6px] rounded-md self-start hover:bg-gray-600 transition"
                 >
-                    Use Balance {walletBalanceFormatted} {tokenSymbol}
+                    Use Balance {isConnected ? walletBalanceFormatted : ''} {tokenSymbol}
                 </button>
 
                 <div className="flex-1" />
 
             </main>
-            <DepositActionButton vault={targetVault} maxAmount={walletBalanceFormatted} />
+            <DepositActionButton
+                vault={targetVault}
+                maxAmount={walletBalanceFormatted}
+                onProcessingChange={setIsProcessing}
+            />
 
-            <NumericKeypad decimals={targetVault.underlyingToken.decimals} />
+            <NumericKeypad
+                decimals={targetVault.underlyingToken.decimals}
+                disabled={isProcessing}
+            />
         </div>
     );
 };
