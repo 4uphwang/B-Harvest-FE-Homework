@@ -32,9 +32,6 @@ const nextConfig: NextConfig = {
 
         return config;
     },
-    compiler: {
-        styledComponents: true,
-    },
     // experimental: {
     //     turbo: {
     //         rules: {
