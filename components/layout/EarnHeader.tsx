@@ -4,10 +4,8 @@ import { HeaderLogoImage, MenuIcon, ReloadIcon } from 'assets';
 import { ConnectWallet } from 'components/wallet/ConnectWallet';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useAccount } from 'wagmi';
 
 export const EarnHeader = () => {
-    const { address } = useAccount();
     const headerStyle = {
         backgroundImage: 'linear-gradient(180deg, #000000 90%, rgba(0, 0, 0, 0) 100%)',
     };
