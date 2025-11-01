@@ -62,7 +62,6 @@ Web3 기반 Vault 애플리케이션 프론트엔드 프로젝트입니다. Base
 ### Web3
 - **Wagmi** 2.18.2: React Hooks for Ethereum
 - **Viem** 2.x: TypeScript Ethereum 라이브러리
-- **RainbowKit** 2.2.9: 지갑 연결 UI 컴포넌트
 
 ### Deployment
 - **SST** 3.17.21: AWS 배포를 위한 인프라 코드
@@ -212,7 +211,6 @@ const { totalSupplyValue, isLoading: isLoadingSupply } = useTotalSupplyValue();
 
 - **지원 지갑**: MetaMask, OKX Wallet, Backpack Wallet
 - **네트워크 자동 전환**: Base Sepolia 네트워크가 아닌 경우 자동으로 전환을 요청합니다.
-- **커스텀 모달**: RainbowKit 기반의 커스텀 지갑 선택 모달을 구현했습니다.
 
 ```typescript
 // 지갑 연결 예시
