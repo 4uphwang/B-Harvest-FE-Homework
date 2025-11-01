@@ -3,6 +3,7 @@
 import { HeaderLogoImage, MenuIcon, ReloadIcon } from 'assets';
 import { ConnectWallet } from 'components/wallet/ConnectWallet';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAccount } from 'wagmi';
 
 export const EarnHeader = () => {
@@ -16,7 +17,7 @@ export const EarnHeader = () => {
             style={headerStyle}
             className="flex justify-between items-center h-16 px-4 sticky top-0"
         >
-            <div className="flex items-center">
+            <Link href={"/vaults"} className="flex items-center">
                 <Image
                     src={HeaderLogoImage}
                     alt="Affluent Logo"
@@ -24,7 +25,7 @@ export const EarnHeader = () => {
                     height={24}
                     className="w-6 h-6"
                 />
-            </div>
+            </Link>
 
             <div className="flex items-center space-x-[6px] relative">
 

@@ -16,9 +16,9 @@ interface UserSummaryCardProps {
 export const UserSummaryCard: React.FC<UserSummaryCardProps> = () => {
     const { isConnected, isConnecting } = useAccount();
     const currencySymbol = useAtomValue(currencySymbolAtom);
-    const { totalValue, totalApr } = useUserSummary();
+    const { totalValue, totalApr, isLoading } = useUserSummary();
 
-    if (isConnecting) return <SkeletonSummaryCard />;
+    if (isConnecting || isLoading) return <SkeletonSummaryCard />;
 
     return (
         <div className="bg-surfaces-base-2 p-4 rounded-xl shadow-lg flex justify-between items-center text-white">

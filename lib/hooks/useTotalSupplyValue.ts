@@ -10,11 +10,11 @@ import { useMemo } from 'react';
 
 export function useTotalSupplyValue() {
     const currency = useAtomValue(currencyAtom);
-    const { data: prices } = useCoinPrices(currency);
+    const { data: prices, isLoading: isLoadingPrices, isError: isErrorPrices } = useCoinPrices(currency);
     const { assetAmounts, isLoadingAssets, isErrorAssets } = useVaultAssets();
 
     const totalSupplyValue = useMemo(() => {
-        if (!assetAmounts) return 0;
+        if (!assetAmounts || !prices) return 0;
         return VAULT_LIST.reduce((sum, v) => {
             const amountStr = assetAmounts[v.symbol] || '0';
             const amount = Number(amountStr);
@@ -26,8 +26,8 @@ export function useTotalSupplyValue() {
 
     return {
         totalSupplyValue,
-        isLoading: isLoadingAssets,
-        isError: isErrorAssets,
+        isLoading: isLoadingAssets || isLoadingPrices,
+        isError: isErrorAssets || isErrorPrices,
     };
 }
 

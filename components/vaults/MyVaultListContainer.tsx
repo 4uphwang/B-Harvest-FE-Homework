@@ -12,19 +12,19 @@ import { useMemo, useState } from "react";
 import { MyVaultCard } from "./MyVaultCard";
 
 export default function MyVaultListContainer() {
-    const { aprData, isLoadingApr } = useVaultAprs();
-    const { perVault } = useUserSummary();
+    const { aprData, isLoadingApr, isErrorApr } = useVaultAprs();
+    const { perVault, isLoading: isLoadingUserSummary } = useUserSummary();
     const [searchQuery, setSearchQuery] = useState("");
     const currencySymbol = useAtomValue(currencySymbolAtom);
     const currency = useAtomValue(currencyAtom);
-    const { data: pricesData, isLoading: isLoadingPrices } = useCoinPrices(currency);
+    const { data: pricesData, isLoading: isLoadingPrices, isError: isErrorPrices, refetch: refetchPrices } = useCoinPrices(currency);
 
-    // 공급한 Vault만 필터링 (assets > 0)
+    // Filter vaults that have been supplied (assets > 0)
     const suppliedVaults = useMemo(() => {
         return perVault.filter(v => v.assets > 0n);
     }, [perVault]);
 
-    // 검색 필터링된 vault 목록
+    // Filtered vault list by search query
     const filteredVaults = useMemo(() => {
         if (!searchQuery) return suppliedVaults;
 
@@ -41,12 +41,33 @@ export default function MyVaultListContainer() {
         return formatApr(aprData[vaultSymbol]);
     };
 
-    if (isLoadingApr || isLoadingPrices) {
+    const isLoading = isLoadingApr || isLoadingPrices || isLoadingUserSummary;
+    const isError = isErrorApr || isErrorPrices;
+
+    if (isLoading) {
         return (
             <div className="flex flex-col gap-2 pb-[20vh]">
                 {Array.from({ length: 3 }).map((_, index) => (
                     <SkeletonCard key={index} />
                 ))}
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col gap-y-4">
+                <h2 className="text-lg font-medium text-surfaces-on-surface">My Supplied Vaults</h2>
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                    <p className="text-red-300 mb-2 text-sm font-medium">Failed to load data</p>
+                    <p className="text-red-400/70 text-xs mb-3">Network or server error occurred. Please try again later.</p>
+                    <button
+                        onClick={() => refetchPrices()}
+                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm transition-colors"
+                    >
+                        Retry
+                    </button>
+                </div>
             </div>
         );
     }

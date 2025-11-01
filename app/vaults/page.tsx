@@ -18,7 +18,7 @@ export default function VaultListPage() {
     const { isConnected } = useAccount();
     const currencySymbol = useAtomValue(currencySymbolAtom);
     const { totalValue, perVault } = useUserSummary();
-    const { totalSupplyValue } = useTotalSupplyValue();
+    const { totalSupplyValue, isLoading: isLoadingSupply, isError: isErrorSupply } = useTotalSupplyValue();
     const myVaultsCount = perVault.filter(v => v.assets > 0n).length;
 
     return (
@@ -34,9 +34,15 @@ export default function VaultListPage() {
                             <span className='text-xs text-surfaces-on-3 leading-none h-fit'>
                                 Total Supply
                             </span>
-                            <span className='text-sm text-surfaces-on-surface font-medium leading-none h-fit'>
-                                {formatCompactCurrency(currencySymbol, totalSupplyValue || 0, 2)}
-                            </span>
+                            {isLoadingSupply ? (
+                                <div className='w-16 h-4 bg-surfaces-on-surface/20 rounded animate-pulse'></div>
+                            ) : isErrorSupply ? (
+                                <span className='text-sm text-red-500 font-medium leading-none h-fit'>Error</span>
+                            ) : (
+                                <span className='text-sm text-surfaces-on-surface font-medium leading-none h-fit'>
+                                    {formatCompactCurrency(currencySymbol, totalSupplyValue || 0, 2)}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <p className="text-surfaces-on-4 text-sm font-normal">
@@ -56,7 +62,7 @@ export default function VaultListPage() {
                     <UserSummaryCard isConnected={isConnected} />
                 </div>
 
-                {/* 3. All Vaults 목록 */}
+                {/* 3. All Vaults List */}
                 <VaultListContainer />
             </div>
         </div>

@@ -35,31 +35,31 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
         targetVault.vaultAddress,
         targetVault.symbol
     );
-    const { data: pricesData } = useCoinPrices(currency);
+    const { data: pricesData, isLoading: isLoadingPrices } = useCoinPrices(currency);
     const vaultBalanceFormatted = assetsFormatted || '0.00';
     const tokenSymbol = targetVault.underlyingToken.symbol;
 
-    // 토큰 가격 계산
+    // Calculate token price
     const tokenPrice = useMemo(() => {
         if (!pricesData) return 0;
         return getPrice(tokenSymbol, pricesData, currency);
     }, [pricesData, tokenSymbol, currency]);
 
-    // Vault에 공급한 자산의 가치 계산
+    // Calculate value of assets supplied to vault
     const suppliedValue = useMemo(() => {
         if (!assetsFormatted || assetsFormatted === '0.00' || !tokenPrice) return '0.00';
         const value = parseFloat(assetsFormatted) * tokenPrice;
         return value.toFixed(2);
     }, [assetsFormatted, tokenPrice]);
 
-    // 입력한 금액의 가치 계산
+    // Calculate value of input amount
     const inputAmountValue = useMemo(() => {
         if (!inputAmount || inputAmount === '0.00' || !tokenPrice) return '0.00';
         const value = parseFloat(inputAmount) * tokenPrice;
         return value.toFixed(2);
     }, [inputAmount, tokenPrice]);
 
-    // 잔액 초과 여부 계산
+    // Check if input exceeds balance
     const exceedsBalance = useMemo(() => {
         const inNum = Number(inputAmount || 0);
         const balNum = Number(vaultBalanceFormatted || 0);
@@ -74,11 +74,44 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
 
     const aprValue = formatAPR();
 
-    const getAprDisplay = () => {
-        if (isLoadingApr) return 'Loading...';
-        if (isErrorApr) return 'Error';
-        return `${aprValue}%`;
-    };
+    // Combine all loading states
+    const isLoading = isLoadingApr || isLoadingVaultBalance || isLoadingPrices;
+
+    // Early return with skeleton if any data is loading
+    if (isLoading) {
+        return (
+            <div className="flex flex-col h-screen bg-black">
+                <header className="p-4 h-16 flex justify-between items-center bg-black">
+                    <button onClick={() => router.back()}>
+                        <LeftArrowIcon className="text-white w-7 h-7" />
+                    </button>
+                    <div className="flex items-center gap-x-1">
+                        <div className="w-8 h-4 bg-surfaces-on-surface/20 rounded animate-pulse"></div>
+                        <div className="w-12 h-4 bg-surfaces-on-surface/20 rounded animate-pulse"></div>
+                    </div>
+                </header>
+                <main className="flex-1 px-4 flex flex-col overflow-auto leading-none">
+                    <div className="flex flex-col gap-y-8">
+                        <div className="flex flex-col gap-y-7">
+                            <div className="flex flex-col gap-y-[6px]">
+                                <div className="w-32 h-6 bg-surfaces-on-surface/20 rounded animate-pulse"></div>
+                                <div className="w-48 h-4 bg-surfaces-on-surface/10 rounded animate-pulse"></div>
+                            </div>
+                            <div className="flex flex-col gap-y-[6px]">
+                                <div className="w-24 h-6 bg-surfaces-on-surface/20 rounded animate-pulse"></div>
+                                <div className="w-40 h-4 bg-surfaces-on-surface/10 rounded animate-pulse"></div>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="w-32 h-12 bg-surfaces-on-surface/20 rounded animate-pulse"></div>
+                            <div className="w-20 h-8 bg-surfaces-on-surface/10 rounded animate-pulse"></div>
+                        </div>
+                    </div>
+                    <div className="w-40 h-8 bg-surfaces-on-surface/20 rounded animate-pulse mt-4"></div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-screen bg-black ">
@@ -91,24 +124,21 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                     <span className="text-surfaces-on-3 font-medium">
                         APY
                     </span>
-                    <span className={`font-medium ${isLoadingApr ? 'text-surfaces-on-3 text-sm' :
-                        isErrorApr ? 'text-red-500' :
-                            'text-white'
-                        }`}>
-                        {getAprDisplay()}
+                    <span className="font-medium text-white">
+                        {aprValue}%
                     </span>
                 </div>
             </header>
 
-            {/* 본문 Content */}
+            {/* Main Content */}
             <main className="flex-1 px-4 flex flex-col overflow-auto leading-none">
 
                 <div className='flex flex-col gap-y-8'>
                     <div className='flex flex-col gap-y-7'>
                         <div className="flex flex-col gap-y-[6px] text-xl text-surfaces-on-6">
-                            <p className="flex items-center gap-x-3">
+                            <div className="flex items-center gap-x-3">
                                 <span>Withdraw</span>
-                                <div className="flex items-center gap-x-2">
+                                <span className="flex items-center gap-x-2">
                                     <Image
                                         src={getTokenImage(targetVault.symbol)}
                                         alt={targetVault.symbol}
@@ -117,8 +147,8 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                                         className="rounded-full"
                                     />
                                     <span className="mr-1 text-white">{targetVault.symbol}</span>
-                                </div>
-                            </p>
+                                </span>
+                            </div>
                             <p className='text-sm text-surfaces-on-3'>
                                 My Supplied:
                                 <span className="text-surfaces-on-8">{isConnected ? vaultBalanceFormatted : '--'} {targetVault.symbol}</span>
@@ -126,9 +156,9 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                         </div>
 
                         <div className="flex flex-col gap-y-[6px]">
-                            <p className="flex text-xl items-center gap-x-3 text-surfaces-on-6">
+                            <div className="flex text-xl items-center gap-x-3 text-surfaces-on-6">
                                 <span>To</span>
-                                <div className="flex items-center gap-x-2">
+                                <span className="flex items-center gap-x-2">
                                     <Image
                                         src={getTokenImage(tokenSymbol)}
                                         alt={tokenSymbol}
@@ -137,8 +167,8 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                                         className="rounded-full"
                                     />
                                     <span className="mr-1 text-white">{tokenSymbol}</span>
-                                </div>
-                            </p>
+                                </span>
+                            </div>
                             <p className='text-sm text-surfaces-on-3'>
                                 Wallet Balance: <span className="mx-1 text-surfaces-on-8">${suppliedValue} </span> {assetsFormatted} {targetVault.symbol}
                             </p>
@@ -155,7 +185,7 @@ export const WithdrawPage: React.FC<WithdrawPageProps> = ({ targetVault }) => {
                     </div>
                     {exceedsBalance && (
                         <div className="text-xs text-red-500 -mt-1">
-                            입력 금액이 Vault 잔액을 초과했습니다.
+                            Input amount exceeds vault balance.
                         </div>
                     )}
                 </div>

@@ -31,7 +31,7 @@ export const MyVaultCard: React.FC<MyVaultCardProps> = ({
             href={`/vaults/${vault.symbol}?action=withdraw`}
             className="flex items-center justify-between py-[6px] rounded-xl font-medium "
         >
-            {/* 왼쪽: 토큰 정보 */}
+            {/* Left: Token info */}
             <div className="flex items-center gap-3">
                 <div className="relative">
                     <Image
@@ -55,7 +55,7 @@ export const MyVaultCard: React.FC<MyVaultCardProps> = ({
                 </div>
             </div>
 
-            {/* 오른쪽: APY */}
+            {/* Right: APY */}
             <div className="text-right flex items-center">
                 <span className={`text-lg font leading-none  ${isUsdt ? 'text-id-ap' : 'text-white'}`}>
                     {aprValue}%

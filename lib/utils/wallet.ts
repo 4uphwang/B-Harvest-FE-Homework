@@ -2,8 +2,8 @@ import { COINGECKO_ID_MAP } from "lib/config/coingecko";
 import { CURRENCY_MAP } from "lib/config/currencyConfig";
 import { CoinPrices, Currency } from "lib/types/common";
 import { chains, config } from "provider/config";
-import { switchChain } from "wagmi/actions";
 import { formatUnits } from "viem";
+import { switchChain } from "wagmi/actions";
 
 /**
  * 주소 문자열을 좌우 지정된 길이로 자르고 가운데를 "..."으로 생략.

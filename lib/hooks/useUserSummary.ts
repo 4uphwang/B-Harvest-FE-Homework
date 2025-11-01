@@ -22,10 +22,10 @@ type PerVaultSupply = {
 export function useUserSummary() {
     const { address, isConnected } = useAccount();
     const currency = useAtomValue(currencyAtom);
-    const { aprData } = useVaultAprs();
-    const { data: prices } = useCoinPrices(currency);
+    const { aprData, isLoadingApr } = useVaultAprs();
+    const { data: prices, isLoading: isLoadingPrices } = useCoinPrices(currency);
 
-    const { data: balancesResult } = useReadContracts({
+    const { data: balancesResult, isLoading: isLoadingBalances } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault) => ({
             address: vault.vaultAddress,
             abi: VAULT_ABI,
@@ -43,7 +43,7 @@ export function useUserSummary() {
         r?.status === 'success' && typeof r.result === 'bigint' ? r.result : 0n
     ));
 
-    const { data: assetsResult } = useReadContracts({
+    const { data: assetsResult, isLoading: isLoadingAssets } = useReadContracts({
         contracts: isConnected && address ? VAULT_LIST.map((vault, idx) => ({
             address: vault.vaultAddress,
             abi: VAULT_ABI,
@@ -79,11 +79,14 @@ export function useUserSummary() {
         return numerator / totalValue;
     })();
 
+    const isLoading = (isConnected && (isLoadingBalances || isLoadingAssets)) || isLoadingApr || isLoadingPrices;
+
     return {
         isConnected,
         perVault,
         totalValue,
         totalApr: weightedApr,
+        isLoading,
     };
 }
 

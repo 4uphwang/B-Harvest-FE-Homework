@@ -21,7 +21,7 @@ export default async function VaultDetailPage({ params, searchParams }: VaultDet
     if (!targetVault) {
         return (
             <div className="p-10 text-red-500 text-center">
-                Vault '{vaultSymbol}'을 찾을 수 없습니다.
+                Vault '{vaultSymbol}' not found.
             </div>
         );
     }

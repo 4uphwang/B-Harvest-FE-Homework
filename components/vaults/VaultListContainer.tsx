@@ -4,20 +4,23 @@ import { SearchIcon } from "assets";
 import { SkeletonCard } from "components/ui/Skeleton";
 import { useAtomValue } from "jotai";
 import { VAULT_LIST } from "lib/config/vaults";
+import { useCoinPrices } from "lib/hooks/useCoinPrices";
 import { useVaultAssets } from "lib/hooks/useValueAssets";
 import { useVaultAprs } from "lib/hooks/useVaultAprs";
-import { currencySymbolAtom } from "lib/state/currency";
+import { currencyAtom, currencySymbolAtom } from "lib/state/currency";
 import { formatApr, formatCurrency } from "lib/utils/wallet";
 import { useMemo, useState } from "react";
 import { VaultCard } from "./VaultCard";
 
 export default function VaultListContainer() {
-    const { aprData, isLoadingApr } = useVaultAprs();
-    const { assetAmounts, isLoadingAssets } = useVaultAssets();
+    const { aprData, isLoadingApr, isErrorApr } = useVaultAprs();
+    const { assetAmounts, isLoadingAssets, isErrorAssets, refetch: refetchAssets } = useVaultAssets();
+    const currency = useAtomValue(currencyAtom);
+    const { data: pricesData, isLoading: isLoadingPrices, isError: isErrorPrices, refetch: refetchPrices } = useCoinPrices(currency);
     const [searchQuery, setSearchQuery] = useState("");
     const currencySymbol = useAtomValue(currencySymbolAtom);
 
-    // 검색 필터링된 vault 목록
+    // Filtered vault list by search query
     const filteredVaults = useMemo(() => {
         if (!searchQuery) return VAULT_LIST;
 
@@ -29,12 +32,24 @@ export default function VaultListContainer() {
         );
     }, [searchQuery]);
 
-    const isLoading = isLoadingApr || isLoadingAssets;
-
+    const isError = isErrorApr || isErrorAssets || isErrorPrices;
 
     const formatVaultAPR = (vaultSymbol: string) => {
         if (!aprData || !aprData[vaultSymbol]) return "0.00";
         return formatApr(aprData[vaultSymbol]);
+    };
+
+    const handleRefetch = () => {
+        refetchPrices();
+        refetchAssets();
+    };
+
+    // Check if vault data is ready (individual check)
+    const isVaultDataReady = (vault: typeof VAULT_LIST[0]) => {
+        const hasApr = aprData && aprData[vault.symbol] !== undefined;
+        const hasAssets = assetAmounts && assetAmounts[vault.symbol] !== undefined;
+        const hasPrices = !!pricesData;
+        return hasApr && hasAssets && hasPrices;
     };
 
     return (
@@ -61,19 +76,29 @@ export default function VaultListContainer() {
 
             {/* Vault List */}
             <div className="flex flex-col gap-2 pb-[20vh]">
-                {isLoading ? (
-                    // Loading skeleton
-                    <>
-                        {Array.from({ length: 3 }).map((_, index) => (
-                            <SkeletonCard key={index} />
-                        ))}
-                    </>
+                {isError ? (
+                    // Error state
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                        <p className="text-red-300 mb-2 text-sm font-medium">Failed to load data</p>
+                        <p className="text-red-400/70 text-xs mb-3">Network or server error occurred. Please try again later.</p>
+                        <button
+                            onClick={handleRefetch}
+                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm transition-colors"
+                        >
+                            Retry
+                        </button>
+                    </div>
                 ) : filteredVaults.length === 0 ? (
                     <div className="text-center py-8 text-surfaces-on-4">
                         No vaults found
                     </div>
                 ) : (
                     filteredVaults.map((vault) => {
+                        // Show skeleton if this vault's data is not ready yet
+                        if (!isVaultDataReady(vault)) {
+                            return <SkeletonCard key={vault.symbol} />;
+                        }
+
                         const rawAmount = assetAmounts?.[vault.symbol];
                         const displayAmount = formatCurrency(rawAmount, 2);
                         const aprValue = formatVaultAPR(vault.symbol);
